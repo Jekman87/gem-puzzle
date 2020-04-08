@@ -4,7 +4,7 @@ import Field from './Field.js';
 export default class GemPuzzle {
   constructor(size) {
     this.size = size || 4;
-    this.field = null;
+    this.gameField = null;
 
   }
 
@@ -16,12 +16,12 @@ export default class GemPuzzle {
     const statisticsPanel = this.createStatisticsPannel();
 
     // const field = new Field();
-    this.field  = document.createElement('div');
-    this.field.classList.add('field');
+    this.gameField  = document.createElement('div');
+    this.gameField.classList.add('field');
 
     this.addTilesToField();
 
-    container.append(controlPanel, statisticsPanel, this.field);
+    container.append(controlPanel, statisticsPanel, this.gameField);
     document.body.prepend(container);
   }
 
@@ -34,7 +34,7 @@ export default class GemPuzzle {
 
     for (let i = 0; i < buttonText.length; i += 1) {
       const button = document.createElement('button');
-      button.classList.add('setting-btn', buttonClass[i]);
+      button.classList.add('setting__btn', buttonClass[i]);
       button.textContent = buttonText[i];
       settingPanel.append(button);
     }
@@ -46,41 +46,54 @@ export default class GemPuzzle {
     const statisticsPanel = document.createElement('div');
     statisticsPanel.classList.add('statistics');
 
+    const statisticsText = ['Ходов: ', 'Время: '];
+    const statisticsCount = ['0', '00:00'];
+
+    for (let i = 0; i < statisticsText.length; i += 1) {
+      const field = document.createElement('span');
+      field.classList.add('statistics__text');
+      field.textContent = statisticsText[i];
+
+      const сount = document.createElement('span');
+      сount.classList.add('statistics__count');
+      сount.textContent = statisticsCount[i];
+
+      field.append(сount);
+      statisticsPanel.append(field);
+    }
+
     const moves = document.createElement('span');
-    moves.classList.add('statistics-text');
+    moves.classList.add('statistics__text');
     moves.textContent = 'Ходов: ';
     const movesCount = document.createElement('span');
-    movesCount.classList.add('statistics-count');
+    movesCount.classList.add('statistics__count');
     movesCount.textContent = '0';
     moves.append(movesCount);
-
-    const time = document.createElement('span');
-    time.classList.add('statistics-text');
-    time.textContent = 'Время: ';
-    const timeCount = document.createElement('span');
-    timeCount.classList.add('statistics-count');
-    timeCount.textContent = '00:00';
-    time.append(timeCount);
-
-    statisticsPanel.append(moves, time);
 
     return statisticsPanel;
   }
 
   addTilesToField() {
     const numberOfTiles = this.size ** 2;
-
-
-    let tilesArray = Array(numberOfTiles);
-    tilesArray.fill('1');
-    let num = tilesArray.map((e, i) => i);
-
-    console.log(num);
-
+    Array(numberOfTiles).fill('1').forEach((e, i) => {
+      const tile = document.createElement('div');
+      tile.classList.add('field__tile');
+      tile.textContent = i;
+      this.gameField.append(tile);
+    });
   }
 
 
-  
+  addListeners() {
+    document.addEventListener('keydown', this.keydownHandler.bind(this));
+    document.addEventListener('keyup', this.keyupHandler.bind(this));
+
+    this.keyboard.addEventListener('mousedown', this.mousedownHandler.bind(this));
+    this.keyboard.addEventListener('mouseup', this.mouseupHandler.bind(this));
+
+    this.textarea.addEventListener('blur', this.textarea.focus);
+    this.textarea.focus();
+  }
 
 }
 
