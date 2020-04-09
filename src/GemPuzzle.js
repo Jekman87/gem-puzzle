@@ -5,7 +5,7 @@ export default class GemPuzzle {
   constructor(size) {
     this.size = size || 4;
     this.gameField = null;
-
+    this.zeroPos = 0;
   }
 
   renderGame() {
@@ -23,6 +23,8 @@ export default class GemPuzzle {
 
     container.append(controlPanel, statisticsPanel, this.gameField);
     document.body.prepend(container);
+
+    this.selectAllowed();
   }
 
   createSettingPannel() {
@@ -86,15 +88,13 @@ export default class GemPuzzle {
       numberOfTilesArr.push(number);
     }
 
-    let zeroPos = 0;
-
     numberOfTilesArr.forEach((e, i) => {
       const tile = document.createElement('div');
       tile.classList.add('field__tile');
 
       if (e === 0) {
         tile.classList.add('tile_space');
-        zeroPos = i;
+        this.zeroPos  = i;
       } else {
         tile.textContent = e;
       }
@@ -102,10 +102,45 @@ export default class GemPuzzle {
       this.gameField.append(tile);
     });
 
-    this.selectAllowed(zeroPos);
+
   }
 
-  selectAllowed(zeroPos) {
+  addListeners() {
+    const startBtn = document.getElementById('start');
+    startBtn.addEventListener('click', this.startBtnHandler.bind(this));
+
+    const stopBtn = document.getElementById('stop');
+    stopBtn.addEventListener('click', this.stopBtnHandler.bind(this));
+
+    const saveBtn = document.getElementById('save');
+    saveBtn.addEventListener('click', this.saveBtnHandler.bind(this));
+
+    const resultsBtn = document.getElementById('results');
+    resultsBtn.addEventListener('click', this.resultsBtnHandler.bind(this));
+
+    this.gameField.addEventListener('click', this.clickFieldHandler.bind(this));
+  }
+
+
+  startBtnHandler() {
+    this.gameField.innerHTML = '';
+    this.addTilesToField();
+  }
+
+  stopBtnHandler() {
+
+  }
+
+  saveBtnHandler() {
+
+  }
+
+  resultsBtnHandler() {
+
+  }
+
+  selectAllowed() {
+    const zeroPos = this.zeroPos;
     const size = this.size;
     const allowedPos = [];
 
@@ -131,36 +166,44 @@ export default class GemPuzzle {
     });
   }
 
+  clickFieldHandler(event) {
+    const target = event.target;
 
-  addListeners() {
-    const startBtn = document.getElementById('start');
-    startBtn.addEventListener('click', this.startBtnHandler.bind(this));
-
-    const stopBtn = document.getElementById('stop');
-    stopBtn.addEventListener('click', this.stopBtnHandler.bind(this));
-
-    const saveBtn = document.getElementById('save');
-    saveBtn.addEventListener('click', this.saveBtnHandler.bind(this));
-
-    const resultsBtn = document.getElementById('results');
-    resultsBtn.addEventListener('click', this.resultsBtnHandler.bind(this));
+    if (target.closest('.tile_allowed')) {
+      this.swapWithZeroTile(target);
+    }
   }
 
+  swapWithZeroTile(target) {
+    const cloneTarget = target.cloneNode(true);
+    const zeroTile = this.gameField.querySelector(`.field__tile:nth-child(${this.zeroPos + 1})`)
+    const cloneZeroTile = zeroTile.cloneNode(true);
 
-  startBtnHandler() {
-    this.gameField.innerHTML = '';
-    this.addTilesToField();
+    Array.prototype.forEach.call(target.parentNode.childNodes, (e, i) => {
+      if (target === e) {
+        this.zeroPos = i;
+      }
+    });
+
+    this.gameField.replaceChild(cloneTarget, zeroTile);
+    this.gameField.replaceChild(cloneZeroTile, target);
+
+    const movesCount = document.getElementById('moves');
+    movesCount.textContent = +movesCount.textContent + 1;
+
+    this.clearAllowed();
+    this.checkWin();
+    this.selectAllowed();
   }
 
-  stopBtnHandler() {
-
+  clearAllowed() {
+    const tiles = document.querySelectorAll('.field__tile');
+    tiles.forEach(tile => {
+      tile.classList.remove('tile_allowed');
+    })
   }
 
-  saveBtnHandler() {
-
-  }
-
-  resultsBtnHandler() {
+  checkWin() {
 
   }
 
