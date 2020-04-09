@@ -18,6 +18,7 @@ export default class GemPuzzle {
     const controlPanel = this.createSettingPannel();
     const statisticsPanel = this.createStatisticsPannel();
     const sizePannel = this.createSizePannel();
+    const modal = this.createModal();
 
     this.gameField  = document.createElement('div');
     this.gameField.classList.add('field');
@@ -30,7 +31,7 @@ export default class GemPuzzle {
       this.createRandomField();
     }
 
-    container.append(controlPanel, statisticsPanel, this.gameField, sizePannel);
+    container.append(controlPanel, statisticsPanel, this.gameField, sizePannel, modal);
     document.body.prepend(container);
 
     if (this.isStarted && this.savedData) {
@@ -124,6 +125,26 @@ export default class GemPuzzle {
     return sizePanel;
   }
 
+  createModal() {
+    const modal = document.createElement('div');
+    modal.classList.add('modal__overlay');
+
+    const modalContent = document.createElement('div');
+    modalContent.classList.add('modal__content');
+
+    const modalText = document.createElement('div');
+    modalText.classList.add('modal__text');
+
+    const modalBtn = document.createElement('button');
+    modalBtn.classList.add('modal__btn');
+    modalBtn.textContent = 'OK';
+
+    modalContent.append(modalText, modalBtn);
+    modal.append(modalContent);
+
+    return modal;
+  }
+
   createRandomField() {
     const numberOfTiles = this.size ** 2;
     const numberArray = Array(numberOfTiles).fill().map((e, i) => i);
@@ -173,6 +194,9 @@ export default class GemPuzzle {
     const sizePannel = document.querySelector('.size-pannel');
     sizePannel.addEventListener('click', this.sizePannelHandler.bind(this));
 
+    const modalBtn = document.querySelector('.modal__btn');
+    modalBtn.addEventListener('click', this.modalBtnHandler.bind(this));
+
     this.gameField.addEventListener('click', this.clickFieldHandler.bind(this));
 
     this.gameField.addEventListener('dragstart', this.dragStartHandler.bind(this));
@@ -213,12 +237,33 @@ export default class GemPuzzle {
     const serialData = JSON.stringify(dataForSave)
     localStorage.setItem('GemPuzzle', serialData);
 
-    alert('Игра сохранена!');
+    this.showModal('Игра сохранена!');
   }
 
   resultsBtnHandler() {
+    const savedData = JSON.parse(localStorage.getItem('GemPuzzleRecord'));
+    let modalContent = 'Результаты:<br>';
+
+    if (savedData) {
+      savedData.forEach((e, i) => {
+        modalContent += `${i + 1}. Ходов: ${e[0]}, время ${e[1]}<br>`;
+      })
 
 
+    } else {
+      modalContent = 'Реультатов пока нет:('
+    }
+
+
+
+    this.showModal(modalContent);
+  }
+
+  showModal(content) {
+    const modal = document.querySelector('.modal__overlay');
+    const modalText = document.querySelector('.modal__text');
+    modalText.innerHTML = content || '';
+    modal.classList.add('modal__overlay_show');
   }
 
   sizePannelHandler(event) {
@@ -231,6 +276,11 @@ export default class GemPuzzle {
     }
   }
 
+  modalBtnHandler() {
+    const modal = document.querySelector('.modal__overlay');
+    modal.classList.remove('modal__overlay_show');
+  }
+
   resetCountres() {
     clearInterval(this.timerInterval);
     const timer = document.getElementById('time');
@@ -239,7 +289,6 @@ export default class GemPuzzle {
     const movesCount = document.getElementById('moves');
     movesCount.textContent = 0;
   }
-
 
   restartGameField() {
     this.gameField.innerHTML = '';
@@ -338,11 +387,39 @@ export default class GemPuzzle {
       const movesCount = document.getElementById('moves').textContent;
       const timer = document.getElementById('time').textContent;
 
-      alert(`Ура! Вы решили головоломку за ${timer} и ${movesCount} ходов!`);
+      this.showModal(`Ура! Вы решили головоломку за ${timer} и ${movesCount} ходов!`);
+
+      this.addNewRecord(movesCount, timer);
 
       this.restartGameField();
     }
   }
+
+  addNewRecord(movesCount, timer) {
+    const savedData = JSON.parse(localStorage.getItem('GemPuzzleRecord'));
+    let dataForSave = [];
+
+    if (savedData) {
+      dataForSave = savedData;
+
+      let i = 0
+      while(movesCount < dataForSave[i].movesCount) {
+        i += 1;
+      }
+
+      dataForSave.splice(i, 0, [movesCount, timer])
+    } else {
+      dataForSave.push([movesCount, timer,]);
+    }
+
+    if (dataForSave.length > 10 ) {
+      dataForSave.length = 10
+    }
+
+    const serialData = JSON.stringify(dataForSave)
+    localStorage.setItem('GemPuzzleRecord', serialData);
+  }
+
 
   startTime() {
     let timer = document.getElementById('time');
