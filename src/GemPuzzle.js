@@ -1,16 +1,17 @@
-/* eslint-disable import/extensions */
-import Field from './Field.js';
-
 export default class GemPuzzle {
-  constructor(size) {
-    this.size = size || 4;
+  constructor() {
+    this.size = 4;
     this.gameField = null;
     this.zeroPos = 0;
     this.timerInterval = 0;
     this.dragged = null;
+    this.isStarted = false;
+    this.savedData = null;
   }
 
   renderGame() {
+    this.checkSavedData();
+
     const container = document.createElement('div');
     container.classList.add('container');
 
@@ -20,11 +21,34 @@ export default class GemPuzzle {
 
     this.gameField  = document.createElement('div');
     this.gameField.classList.add('field');
+    this.gameField.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`
 
-    this.addTilesToField();
+    if (this.savedData) {
+      const numberOfTilesArr = this.savedData.arrNumbersOfTiles;
+      this.addTilesToField(numberOfTilesArr);
+    } else {
+      this.createRandomField();
+    }
 
     container.append(controlPanel, statisticsPanel, this.gameField, sizePannel);
     document.body.prepend(container);
+
+    if (this.isStarted && this.savedData) {
+      if (document.getElementById('time').textContent !== '00:00' ) {
+        this.startTime();
+      }
+    }
+  }
+
+  checkSavedData() {
+    const savedData = JSON.parse(localStorage.getItem('GemPuzzle'));
+
+    if (savedData) {
+      this.savedData = savedData;
+      this.size = savedData.size;
+      this.zeroPos = savedData.zeroPos;
+      this.isStarted = true;
+    }
   }
 
   createSettingPannel() {
@@ -50,7 +74,14 @@ export default class GemPuzzle {
     statisticsPanel.classList.add('statistics');
 
     const statisticsText = ['Ходов: ', 'Время: '];
-    const statisticsCount = ['0', '00:00'];
+    let statisticsCount = ['0', '00:00'];
+
+    if (this.savedData) {
+      statisticsCount = [this.savedData.movesCount, `${this.savedData.min}:${this.savedData.sec}`];
+    } else {
+      statisticsCount = ['0', '00:00'];
+    }
+
     const statisticsCountId = ['moves', 'time'];
 
     for (let i = 0; i < statisticsText.length; i += 1) {
@@ -93,7 +124,7 @@ export default class GemPuzzle {
     return sizePanel;
   }
 
-  addTilesToField() {
+  createRandomField() {
     const numberOfTiles = this.size ** 2;
     const numberArray = Array(numberOfTiles).fill().map((e, i) => i);
     const numberOfTilesArr = [];
@@ -102,6 +133,11 @@ export default class GemPuzzle {
       const number = numberArray.splice(Math.floor(Math.random() * numberArray.length), 1)[0];
       numberOfTilesArr.push(number);
     }
+
+    this.addTilesToField(numberOfTilesArr)
+  }
+
+  addTilesToField(numberOfTilesArr) {
 
     numberOfTilesArr.forEach((e, i) => {
       const tile = document.createElement('div');
@@ -147,10 +183,55 @@ export default class GemPuzzle {
   }
 
   startBtnHandler() {
+    this.isStarted = true;
     this.restartGameField();
   }
 
   stopBtnHandler() {
+    this.isStarted = false;
+    this.resetCountres();
+  }
+
+  saveBtnHandler() {
+    const arrNumbersOfTiles = Array.prototype.map.call(this.gameField.childNodes, (tile) => {
+      return tile.textContent;
+    });
+
+    const movesCount = document.getElementById('moves').textContent;
+    const timer = document.getElementById('time').textContent;
+    const [ min, sec ] = timer.split(':');
+
+    const dataForSave = {
+      size: this.size,
+      zeroPos: this.zeroPos,
+      arrNumbersOfTiles,
+      movesCount,
+      min,
+      sec,
+    }
+
+    const serialData = JSON.stringify(dataForSave)
+    localStorage.setItem('GemPuzzle', serialData);
+
+    alert('Игра сохранена!');
+  }
+
+  resultsBtnHandler() {
+
+
+  }
+
+  sizePannelHandler(event) {
+    const target = event.target;
+
+    if (target.classList.contains('size-pannel__text')) {
+      this.size = +target.dataset.sizeField;
+      this.isStarted = false;
+      this.restartGameField();
+    }
+  }
+
+  resetCountres() {
     clearInterval(this.timerInterval);
     const timer = document.getElementById('time');
     timer.textContent = '00:00';
@@ -159,30 +240,17 @@ export default class GemPuzzle {
     movesCount.textContent = 0;
   }
 
-  saveBtnHandler() {
-
-  }
-
-  resultsBtnHandler() {
-
-  }
-
-  sizePannelHandler(event) {
-    const target = event.target;
-    this.size = +target.dataset.sizeField;
-    this.restartGameField();
-  }
 
   restartGameField() {
     this.gameField.innerHTML = '';
     this.gameField.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`
 
-    const movesCount = document.getElementById('moves');
-    movesCount.textContent = 0;
+    this.resetCountres();
+    this.createRandomField();
 
-    this.addTilesToField();
-    clearInterval(this.timerInterval);
-    this.startTime();
+    if (this.isStarted) {
+      this.startTime();
+    }
   }
 
   selectAllowed() {
@@ -214,6 +282,10 @@ export default class GemPuzzle {
   }
 
   clickFieldHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
 
     if (target.closest('.tile_allowed')) {
@@ -252,18 +324,33 @@ export default class GemPuzzle {
   }
 
   checkWin() {
-    const isWin = Array.prototype.every.call(this.gameField.childNodes, (tile, i) => {
-      return +tile.textContent === i;
+    const tiles = this.gameField.childNodes
+
+    const isWin = Array.prototype.every.call(tiles, (tile, i) => {
+      if (i === tiles.length - 1) {
+        return +tile.textContent === 0;
+      } else {
+        return +tile.textContent === i + 1;
+      }
     });
 
-    //console.log(isWin);
+    if (isWin) {
+      const movesCount = document.getElementById('moves').textContent;
+      const timer = document.getElementById('time').textContent;
+
+      alert(`Ура! Вы решили головоломку за ${timer} и ${movesCount} ходов!`);
+
+      this.restartGameField();
+    }
   }
 
   startTime() {
-    const timer = document.getElementById('time');
+    let timer = document.getElementById('time');
 
-    let sec = 0;
-    let min = 0;
+    const [ m, s ] = timer.textContent.split(':');
+
+    let min = +m;
+    let sec = +s;
 
     function tick() {
       sec += 1
@@ -285,6 +372,10 @@ export default class GemPuzzle {
   }
 
   dragStartHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
     this.dragged = target;
     event.dataTransfer.effectAllowed = 'move';
@@ -292,6 +383,10 @@ export default class GemPuzzle {
   }
 
   dragOverHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
 
     if (target.classList.contains('tile_space')) {
@@ -302,6 +397,10 @@ export default class GemPuzzle {
   }
 
   dropHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
 
     if (target.classList.contains('tile_space')) {
@@ -312,11 +411,19 @@ export default class GemPuzzle {
   }
 
   dragEndHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
     target.classList.remove('tile_dragged');
   }
 
   dragLeaveHandler(event) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const target = event.target;
     target.classList.remove('tile_over');
   }

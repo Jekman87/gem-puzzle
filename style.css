@@ -40,6 +40,12 @@ body {
 .size-pannel__text {
   margin: 5px;
   padding: 5px;
+  outline: none;
+  border-radius: 5px;
+}
+
+#start {
+  background: #b2cdfa;
 }
 
 .size-pannel__text {
