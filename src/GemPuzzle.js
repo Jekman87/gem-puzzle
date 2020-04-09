@@ -16,14 +16,14 @@ export default class GemPuzzle {
 
     const controlPanel = this.createSettingPannel();
     const statisticsPanel = this.createStatisticsPannel();
+    const sizePannel = this.createSizePannel();
 
-    // const field = new Field();
     this.gameField  = document.createElement('div');
     this.gameField.classList.add('field');
 
     this.addTilesToField();
 
-    container.append(controlPanel, statisticsPanel, this.gameField);
+    container.append(controlPanel, statisticsPanel, this.gameField, sizePannel);
     document.body.prepend(container);
   }
 
@@ -78,6 +78,21 @@ export default class GemPuzzle {
     return statisticsPanel;
   }
 
+  createSizePannel() {
+    const sizePanel = document.createElement('div');
+    sizePanel.classList.add('size-pannel');
+
+    for (let i = 3; i < 9; i += 1) {
+      const sizeText = document.createElement('span');
+      sizeText.classList.add('size-pannel__text');
+      sizeText.dataset.sizeField = i;
+      sizeText.textContent = `${i}x${i}`;
+      sizePanel.append(sizeText);
+    }
+
+    return sizePanel;
+  }
+
   addTilesToField() {
     const numberOfTiles = this.size ** 2;
     const numberArray = Array(numberOfTiles).fill().map((e, i) => i);
@@ -119,6 +134,9 @@ export default class GemPuzzle {
     const resultsBtn = document.getElementById('results');
     resultsBtn.addEventListener('click', this.resultsBtnHandler.bind(this));
 
+    const sizePannel = document.querySelector('.size-pannel');
+    sizePannel.addEventListener('click', this.sizePannelHandler.bind(this));
+
     this.gameField.addEventListener('click', this.clickFieldHandler.bind(this));
 
     this.gameField.addEventListener('dragstart', this.dragStartHandler.bind(this));
@@ -129,14 +147,7 @@ export default class GemPuzzle {
   }
 
   startBtnHandler() {
-    this.gameField.innerHTML = '';
-
-    const movesCount = document.getElementById('moves');
-    movesCount.textContent = 0;
-
-    this.addTilesToField();
-    clearInterval(this.timerInterval);
-    this.startTime();
+    this.restartGameField();
   }
 
   stopBtnHandler() {
@@ -154,6 +165,24 @@ export default class GemPuzzle {
 
   resultsBtnHandler() {
 
+  }
+
+  sizePannelHandler(event) {
+    const target = event.target;
+    this.size = +target.dataset.sizeField;
+    this.restartGameField();
+  }
+
+  restartGameField() {
+    this.gameField.innerHTML = '';
+    this.gameField.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`
+
+    const movesCount = document.getElementById('moves');
+    movesCount.textContent = 0;
+
+    this.addTilesToField();
+    clearInterval(this.timerInterval);
+    this.startTime();
   }
 
   selectAllowed() {

@@ -24,20 +24,28 @@ body {
 }
 
 .container {
-  max-width: 600px;
+  max-width: 500px;
   margin: auto;
 }
 
 .setting,
-.statistics {
+.statistics,
+.size-pannel {
   margin: 20px auto;
   padding: 5px;
 }
 
 .setting__btn,
-.statistics__text {
-  margin: 0 5px;
+.statistics__text,
+.size-pannel__text {
+  margin: 5px;
   padding: 5px;
+}
+
+.size-pannel__text {
+  font-size: 1.8rem;
+  color: blue;
+  cursor: pointer;
 }
 
 .statistics__count {
@@ -48,23 +56,27 @@ body {
   width: 100%;
   border: 2px solid black;
   border-radius: 5px;
-  display: flex;
-  flex-wrap: wrap;
+  padding: 5px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 5px;
 }
 
 .field__tile {
   border: 1px solid black;
   border-radius: 5px;
-  width: calc(100% / 4 - 10px);
-  height: 139px;
-  margin: 5px;
-  font-size: 6rem;
+  font-size: 4rem;
   display: flex;
   justify-content: center;
   align-items: center;
   user-select: none;
   cursor: not-allowed;
   transition: all 0.3s;
+}
+
+.field__tile:before {
+  content: "";
+  padding-top: 100%;
 }
 
 .tile_space {
@@ -85,3 +97,8 @@ body {
   opacity: 0.3;
 }
 
+@media (max-width: 430px) {
+  .field__tile {
+    font-size: 2rem;
+  }
+}
