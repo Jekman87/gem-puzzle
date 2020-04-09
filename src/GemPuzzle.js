@@ -37,6 +37,8 @@ export default class GemPuzzle {
     if (this.isStarted && this.savedData) {
       if (document.getElementById('time').textContent !== '00:00' ) {
         this.startTime();
+      } else {
+        this.isStarted = false;
       }
     }
   }
@@ -164,7 +166,7 @@ export default class GemPuzzle {
       const tile = document.createElement('div');
       tile.classList.add('field__tile');
 
-      if (e === 0) {
+      if (+e === 0) {
         tile.classList.add('tile_space');
         tile.textContent = e;
         this.zeroPos  = i;
@@ -203,7 +205,6 @@ export default class GemPuzzle {
     this.gameField.addEventListener('dragover', this.dragOverHandler.bind(this));
     this.gameField.addEventListener('drop', this.dropHandler.bind(this));
     this.gameField.addEventListener('dragend', this.dragEndHandler.bind(this));
-    this.gameField.addEventListener('dragleave', this.dragLeaveHandler.bind(this));
   }
 
   startBtnHandler() {
@@ -253,8 +254,6 @@ export default class GemPuzzle {
     } else {
       modalContent = 'Реультатов пока нет:('
     }
-
-
 
     this.showModal(modalContent);
   }
@@ -308,24 +307,25 @@ export default class GemPuzzle {
     const allowedPos = [];
 
     if (zeroPos > size - 1) {
-      allowedPos.push(zeroPos - size);
+      allowedPos.push([zeroPos - size, 'to-bottom']);
     }
 
     if (zeroPos % size > 0) {
-      allowedPos.push(zeroPos - 1);
+      allowedPos.push([zeroPos - 1, 'to-right']);
     }
 
     if (zeroPos % size < size - 1) {
-      allowedPos.push(zeroPos + 1);
+      allowedPos.push([zeroPos + 1, 'to-left']);
     }
 
     if (zeroPos < size ** 2 - size) {
-      allowedPos.push(zeroPos + size);
+      allowedPos.push([zeroPos + size, 'to-top']);
     }
 
     allowedPos.forEach(e => {
-      const selectedTile = this.gameField.querySelector(`.field__tile:nth-child(${e + 1})`);
+      const selectedTile = this.gameField.querySelector(`.field__tile:nth-child(${e[0] + 1})`);
       selectedTile.classList.add('tile_allowed');
+      selectedTile.dataset.direction = e[1];
       selectedTile.draggable = 'true';
     });
   }
@@ -336,15 +336,28 @@ export default class GemPuzzle {
     }
 
     const target = event.target;
+    const direction = target.dataset.direction;
 
     if (target.closest('.tile_allowed')) {
-      this.swapWithZeroTile(target);
+      target.classList.add(direction);
+      this.isStarted = false;
+
+      target.addEventListener('animationend', () => {
+        target.classList.remove(direction);
+        this.isStarted = true;
+        this.swapWithZeroTile(target);
+      }), { once: true };
     }
   }
 
   swapWithZeroTile(target) {
+    if (!this.isStarted) {
+      return;
+    }
+
     const cloneTarget = target.cloneNode(true);
-    const zeroTile = this.gameField.querySelector(`.field__tile:nth-child(${this.zeroPos + 1})`)
+
+    const zeroTile = this.gameField.querySelector('.tile_space');
     const cloneZeroTile = zeroTile.cloneNode(true);
 
     Array.prototype.forEach.call(target.parentNode.childNodes, (e, i) => {
@@ -353,8 +366,8 @@ export default class GemPuzzle {
       }
     });
 
-    this.gameField.replaceChild(cloneTarget, zeroTile);
     this.gameField.replaceChild(cloneZeroTile, target);
+    this.gameField.replaceChild(cloneTarget, zeroTile);
 
     const movesCount = document.getElementById('moves');
     movesCount.textContent = +movesCount.textContent + 1;
@@ -362,6 +375,7 @@ export default class GemPuzzle {
     this.clearAllowed();
     this.checkWin();
     this.selectAllowed();
+
   }
 
   clearAllowed() {
@@ -403,7 +417,7 @@ export default class GemPuzzle {
       dataForSave = savedData;
 
       let i = 0
-      while(movesCount < dataForSave[i].movesCount) {
+      while(movesCount < dataForSave[i][0]) {
         i += 1;
       }
 
@@ -469,7 +483,6 @@ export default class GemPuzzle {
     if (target.classList.contains('tile_space')) {
       event.preventDefault();
       event.dataTransfer.dropEffect = 'move';
-      target.classList.add('tile_over');
     }
   }
 
@@ -482,7 +495,6 @@ export default class GemPuzzle {
 
     if (target.classList.contains('tile_space')) {
       this.dragged.classList.remove('tile_dragged');
-      target.classList.remove('tile_over');
       this.swapWithZeroTile(this.dragged);
     }
   }
@@ -494,14 +506,5 @@ export default class GemPuzzle {
 
     const target = event.target;
     target.classList.remove('tile_dragged');
-  }
-
-  dragLeaveHandler(event) {
-    if (!this.isStarted) {
-      return;
-    }
-
-    const target = event.target;
-    target.classList.remove('tile_over');
   }
 }

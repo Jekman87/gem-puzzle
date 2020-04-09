@@ -78,6 +78,9 @@ body {
   user-select: none;
   cursor: not-allowed;
   transition: all 0.3s;
+  animation: 0.3s ease-in-out;
+  background: #dae8ff;
+  position: relative;
 }
 
 .field__tile:before {
@@ -86,21 +89,68 @@ body {
 }
 
 .tile_space {
-  background: #ddd;
-  color: #ddd;
+  opacity: 0;
 }
 
 .tile_allowed {
   cursor: grab;
-  background: #dae8ff;
+  z-index: 1;
 }
 
 .tile_dragged {
   transform: scale(0.8);
 }
 
-.tile_over {
-  opacity: 0.3;
+.to-right {
+  animation-name: right;
+}
+
+.to-left {
+  animation-name: left;
+}
+
+.to-top {
+  animation-name: top;
+}
+
+.to-bottom {
+  animation-name: bottom;
+}
+
+@keyframes right {
+  from {
+    left: 0;
+  }
+  to {
+    left: calc(100% + 5px);
+  }
+}
+
+@keyframes left {
+  from {
+    right: 0;
+  }
+  to {
+    right: calc(100% + 5px);
+  }
+}
+
+@keyframes top {
+  from {
+    bottom: 0;
+  }
+  to {
+    bottom: calc(100% + 5px);;
+  }
+}
+
+@keyframes bottom {
+  from {
+    top: 0;
+  }
+  to {
+    top: calc(100% + 5px);;
+  }
 }
 
 @media (max-width: 430px) {
@@ -119,6 +169,7 @@ body {
   align-items: center;
   width: 100vw;
   height: 100vh;
+  z-index: 2;
 
   background-color: rgba(80, 80, 80, 0.6);
 }
