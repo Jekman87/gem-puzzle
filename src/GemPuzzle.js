@@ -7,6 +7,7 @@ export default class GemPuzzle {
     this.gameField = null;
     this.zeroPos = 0;
     this.timerInterval = 0;
+    this.dragged = null;
   }
 
   renderGame() {
@@ -119,8 +120,13 @@ export default class GemPuzzle {
     resultsBtn.addEventListener('click', this.resultsBtnHandler.bind(this));
 
     this.gameField.addEventListener('click', this.clickFieldHandler.bind(this));
-  }
 
+    this.gameField.addEventListener('dragstart', this.dragStartHandler.bind(this));
+    this.gameField.addEventListener('dragover', this.dragOverHandler.bind(this));
+    this.gameField.addEventListener('drop', this.dropHandler.bind(this));
+    this.gameField.addEventListener('dragend', this.dragEndHandler.bind(this));
+    this.gameField.addEventListener('dragleave', this.dragLeaveHandler.bind(this));
+  }
 
   startBtnHandler() {
     this.gameField.innerHTML = '';
@@ -212,6 +218,7 @@ export default class GemPuzzle {
     const tiles = document.querySelectorAll('.field__tile');
     tiles.forEach(tile => {
       tile.classList.remove('tile_allowed');
+      tile.removeAttribute('draggable');
     });
   }
 
@@ -248,5 +255,40 @@ export default class GemPuzzle {
     this.timerInterval = setInterval(tick, 1000);
   }
 
-}
+  dragStartHandler(event) {
+    const target = event.target;
+    this.dragged = target;
+    event.dataTransfer.effectAllowed = 'move';
+    target.classList.add('tile_dragged');
+  }
 
+  dragOverHandler(event) {
+    const target = event.target;
+
+    if (target.classList.contains('tile_space')) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      target.classList.add('tile_over');
+    }
+  }
+
+  dropHandler(event) {
+    const target = event.target;
+
+    if (target.classList.contains('tile_space')) {
+      this.dragged.classList.remove('tile_dragged');
+      target.classList.remove('tile_over');
+      this.swapWithZeroTile(this.dragged);
+    }
+  }
+
+  dragEndHandler(event) {
+    const target = event.target;
+    target.classList.remove('tile_dragged');
+  }
+
+  dragLeaveHandler(event) {
+    const target = event.target;
+    target.classList.remove('tile_over');
+  }
+}

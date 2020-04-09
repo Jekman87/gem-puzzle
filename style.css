@@ -64,6 +64,7 @@ body {
   align-items: center;
   user-select: none;
   cursor: not-allowed;
+  transition: all 0.3s;
 }
 
 .tile_space {
@@ -73,7 +74,14 @@ body {
 
 .tile_allowed {
   cursor: grab;
+  background: #dae8ff;
 }
 
+.tile_dragged {
+  transform: scale(0.8);
+}
 
+.tile_over {
+  opacity: 0.3;
+}
 
