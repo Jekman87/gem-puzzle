@@ -30,11 +30,12 @@ export default class GemPuzzle {
     settingPanel.classList.add('setting');
 
     const buttonText = ['Перемешать и начать', 'Стоп', 'Сохранить', 'Результаты'];
-    const buttonClass = ['Start', 'Stop', 'Save', 'Results'];
+    const buttonId = ['start', 'stop', 'save', 'results'];
 
     for (let i = 0; i < buttonText.length; i += 1) {
       const button = document.createElement('button');
-      button.classList.add('setting__btn', buttonClass[i]);
+      button.classList.add('setting__btn');
+      button.id = buttonId[i];
       button.textContent = buttonText[i];
       settingPanel.append(button);
     }
@@ -48,6 +49,7 @@ export default class GemPuzzle {
 
     const statisticsText = ['Ходов: ', 'Время: '];
     const statisticsCount = ['0', '00:00'];
+    const statisticsCountId = ['moves', 'time'];
 
     for (let i = 0; i < statisticsText.length; i += 1) {
       const field = document.createElement('span');
@@ -56,6 +58,7 @@ export default class GemPuzzle {
 
       const сount = document.createElement('span');
       сount.classList.add('statistics__count');
+      сount.id = statisticsCountId[i];
       сount.textContent = statisticsCount[i];
 
       field.append(сount);
@@ -75,24 +78,90 @@ export default class GemPuzzle {
 
   addTilesToField() {
     const numberOfTiles = this.size ** 2;
-    Array(numberOfTiles).fill('1').forEach((e, i) => {
+    const numberArray = Array(numberOfTiles).fill().map((e, i) => i);
+    const numberOfTilesArr = [];
+
+    while (numberArray.length) {
+      const number = numberArray.splice(Math.floor(Math.random() * numberArray.length), 1)[0];
+      numberOfTilesArr.push(number);
+    }
+
+    let zeroPos = 0;
+
+    numberOfTilesArr.forEach((e, i) => {
       const tile = document.createElement('div');
       tile.classList.add('field__tile');
-      tile.textContent = i;
+
+      if (e === 0) {
+        tile.classList.add('tile_space');
+        zeroPos = i;
+      } else {
+        tile.textContent = e;
+      }
+
       this.gameField.append(tile);
+    });
+
+    this.selectAllowed(zeroPos);
+  }
+
+  selectAllowed(zeroPos) {
+    const size = this.size;
+    const allowedPos = [];
+
+    if (zeroPos > size - 1) {
+      allowedPos.push(zeroPos - size);
+    }
+
+    if (zeroPos % size > 0) {
+      allowedPos.push(zeroPos - 1);
+    }
+
+    if (zeroPos % size < size - 1) {
+      allowedPos.push(zeroPos + 1);
+    }
+
+    if (zeroPos < size ** 2 - size) {
+      allowedPos.push(zeroPos + size);
+    }
+
+    allowedPos.forEach(e => {
+      const selectedTile = this.gameField.querySelector(`.field__tile:nth-child(${e + 1})`);
+      selectedTile.classList.add('tile_allowed');
     });
   }
 
 
   addListeners() {
-    document.addEventListener('keydown', this.keydownHandler.bind(this));
-    document.addEventListener('keyup', this.keyupHandler.bind(this));
+    const startBtn = document.getElementById('start');
+    startBtn.addEventListener('click', this.startBtnHandler.bind(this));
 
-    this.keyboard.addEventListener('mousedown', this.mousedownHandler.bind(this));
-    this.keyboard.addEventListener('mouseup', this.mouseupHandler.bind(this));
+    const stopBtn = document.getElementById('stop');
+    stopBtn.addEventListener('click', this.stopBtnHandler.bind(this));
 
-    this.textarea.addEventListener('blur', this.textarea.focus);
-    this.textarea.focus();
+    const saveBtn = document.getElementById('save');
+    saveBtn.addEventListener('click', this.saveBtnHandler.bind(this));
+
+    const resultsBtn = document.getElementById('results');
+    resultsBtn.addEventListener('click', this.resultsBtnHandler.bind(this));
+  }
+
+
+  startBtnHandler() {
+    this.gameField.innerHTML = '';
+    this.addTilesToField();
+  }
+
+  stopBtnHandler() {
+
+  }
+
+  saveBtnHandler() {
+
+  }
+
+  resultsBtnHandler() {
+
   }
 
 }

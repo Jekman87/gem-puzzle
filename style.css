@@ -40,6 +40,10 @@ body {
   padding: 5px;
 }
 
+.statistics__count {
+  font-weight: bold;
+}
+
 .field {
   width: 100%;
   border: 2px solid black;
@@ -58,4 +62,18 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
+  cursor: not-allowed;
 }
+
+.tile_space {
+  background: #ddd;
+}
+
+.tile_allowed {
+  cursor: grab;
+  background: #dae8ff;
+}
+
+
+
