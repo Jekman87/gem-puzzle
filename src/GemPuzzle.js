@@ -6,6 +6,7 @@ export default class GemPuzzle {
     this.size = size || 4;
     this.gameField = null;
     this.zeroPos = 0;
+    this.timerInterval = 0;
   }
 
   renderGame() {
@@ -23,8 +24,6 @@ export default class GemPuzzle {
 
     container.append(controlPanel, statisticsPanel, this.gameField);
     document.body.prepend(container);
-
-    this.selectAllowed();
   }
 
   createSettingPannel() {
@@ -94,6 +93,7 @@ export default class GemPuzzle {
 
       if (e === 0) {
         tile.classList.add('tile_space');
+        tile.textContent = e;
         this.zeroPos  = i;
       } else {
         tile.textContent = e;
@@ -102,7 +102,7 @@ export default class GemPuzzle {
       this.gameField.append(tile);
     });
 
-
+    this.selectAllowed();
   }
 
   addListeners() {
@@ -124,11 +124,22 @@ export default class GemPuzzle {
 
   startBtnHandler() {
     this.gameField.innerHTML = '';
+
+    const movesCount = document.getElementById('moves');
+    movesCount.textContent = 0;
+
     this.addTilesToField();
+    clearInterval(this.timerInterval);
+    this.startTime();
   }
 
   stopBtnHandler() {
+    clearInterval(this.timerInterval);
+    const timer = document.getElementById('time');
+    timer.textContent = '00:00';
 
+    const movesCount = document.getElementById('moves');
+    movesCount.textContent = 0;
   }
 
   saveBtnHandler() {
@@ -163,6 +174,7 @@ export default class GemPuzzle {
     allowedPos.forEach(e => {
       const selectedTile = this.gameField.querySelector(`.field__tile:nth-child(${e + 1})`);
       selectedTile.classList.add('tile_allowed');
+      selectedTile.draggable = 'true';
     });
   }
 
@@ -200,11 +212,40 @@ export default class GemPuzzle {
     const tiles = document.querySelectorAll('.field__tile');
     tiles.forEach(tile => {
       tile.classList.remove('tile_allowed');
-    })
+    });
   }
 
   checkWin() {
+    const isWin = Array.prototype.every.call(this.gameField.childNodes, (tile, i) => {
+      return +tile.textContent === i;
+    });
 
+    //console.log(isWin);
+  }
+
+  startTime() {
+    const timer = document.getElementById('time');
+
+    let sec = 0;
+    let min = 0;
+
+    function tick() {
+      sec += 1
+
+      if (sec === 60) {
+        sec = 0;
+        min += 1;
+      }
+
+      if (min === 60) {
+        sec = 0;
+        min = 0;
+      }
+
+      timer.textContent = `${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`;
+    }
+
+    this.timerInterval = setInterval(tick, 1000);
   }
 
 }

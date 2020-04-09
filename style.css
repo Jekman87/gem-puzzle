@@ -68,11 +68,11 @@ body {
 
 .tile_space {
   background: #ddd;
+  color: #ddd;
 }
 
 .tile_allowed {
   cursor: grab;
-  background: #dae8ff;
 }
 
 
