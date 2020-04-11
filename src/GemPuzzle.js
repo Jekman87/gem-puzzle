@@ -403,7 +403,7 @@ export default class GemPuzzle {
 
       this.showModal(`Ура! Вы решили головоломку за ${timer} и ${movesCount} ходов!`);
 
-      this.addNewRecord(movesCount, timer);
+      this.addNewRecord(+movesCount, timer);
 
       this.restartGameField();
     }
@@ -416,9 +416,12 @@ export default class GemPuzzle {
     if (savedData) {
       dataForSave = savedData;
 
-      let i = 0
-      while(movesCount < dataForSave[i][0]) {
-        i += 1;
+      let i;
+
+      for (i = 0; i < dataForSave.length; i += 1) {
+        if (+movesCount < +dataForSave[i][0]) {
+          break;
+        }
       }
 
       dataForSave.splice(i, 0, [movesCount, timer])
